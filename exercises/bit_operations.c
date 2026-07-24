@@ -1,18 +1,95 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <assert.h>
+#include <stddef.h>
 
-uint32_t set_bit(uint32_t value, uint8_t bit_position) {
-    return value | (1U << bit_position);
+bool set_bit(uint32_t *value, uint8_t bit_position) {
+    if ((value == NULL) || (bit_position >= 32U)) {
+        return false; // Return false if invalid input
+    }
+    *value |= (1U << bit_position);
+    return true;
 }
 
-uint32_t clear_bit(uint32_t value, uint8_t bit_position) {
-    return value & ~(1U << bit_position);
+bool clear_bit(uint32_t *value, uint8_t bit_position) {
+
+    if ((value == NULL) || (bit_position >= 32U)) {
+        return false; // Return false if invalid input
+    }
+
+    *value &= ~(1U << bit_position);
+    return true;
 }
 
-uint32_t toggle_bit(uint32_t value, uint8_t bit_position) {
-    return value ^ (1U << bit_position);
+bool toggle_bit(uint32_t *value, uint8_t bit_position) {
+    if ((value == NULL) || (bit_position >= 32U)) {
+        return false; // Return false if invalid input
+    }
+
+    *value = *value ^ (1U << bit_position);
+    return true;
 }
 
-bool is_bit_set(uint32_t value, uint8_t bit_position) {
-    return (value & (1U << bit_position)) != 0;
+bool is_bit_set(uint32_t value, uint8_t bit_position, bool *result) {
+
+    if ((value == NULL) || (bit_position >= 32U)) {
+        if(bit_position >= 32U) {
+            printf("bit position = %d\n", bit_position);
+        }
+        if(value == NULL) {
+            printf("uhh... null?\n");
+        }
+        return false; // Return false if invalid input
+    }
+
+    *result = (value & (1U << bit_position)) != 0;
+    return true;
+}
+
+
+
+int main() {
+    uint32_t value = 0U; 
+    bool result = false;
+
+    assert(set_bit(&value, 3U) == true);
+    assert(value == 8U); // 0000 1000
+    assert(is_bit_set(value, 3U, &result) == true);
+    assert(result == true);
+
+    assert(toggle_bit(&value, 3U) == true); 
+    assert(value == 0U); // 0000 0000
+    
+    assert(set_bit(&value, 32U) == false); //1 0000 0000 0000 0000 must not work
+    assert(set_bit(NULL, 32U) == false); //NULL must not work
+    assert(is_bit_set(value, 3U, NULL) == false); //NULL result must not work
+
+    assert(clear_bit(&value, 3U) == true);
+    assert(value == 0U); // 0000 0000
+
+    //W1D2
+    //Position 0
+
+   
+    assert(set_bit(&value, 1U) == true);
+    assert(set_bit(&value, 0U) == true);
+    assert(is_bit_set(value, 1U, &result) == true);
+    assert(result == true);
+
+    assert(clear_bit(&value, 0U) == true);
+    assert(result != NULL);
+    assert(is_bit_set(value, 0U, &result) == true);
+    assert(result == false);
+    assert(value == 2U); // 0000 0010
+    assert(toggle_bit(&value, 0U) == true); 
+    assert(value == 3U); // 0000 0011
+    assert(toggle_bit(&value, 0U) == true); 
+    assert(value == 2U); // 0000 0010
+    
+
+
+    printf("All tests passed successfully.\n");
+    
+
+    return 0;
 }
