@@ -27,3 +27,20 @@ An atomic operation completes as one indivisible action. Other threads or interr
 3. When would you use a mutex instead of an atomic operation?
 
     One would use a mutex if there is a change of a race condition on that variable.
+
+
+## Project
+
+```c
+    HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
+    HAL_Delay(500); // This gives a 500ms delay
+```
+
+1. What does the timer prescaler do?
+    Divides the clock before the counter sees it
+2. What does the counter period control?
+    Sets the maximum count. 
+3. Why does the callback check htim->Instance == TIM2?
+    Check if the instance of that htim is the Timer2
+4. What can the main loop do now that it is not blocked?
+    Any other task like reading inputs
