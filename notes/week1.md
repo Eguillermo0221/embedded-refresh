@@ -44,3 +44,14 @@ An atomic operation completes as one indivisible action. Other threads or interr
     Check if the instance of that htim is the Timer2
 4. What can the main loop do now that it is not blocked?
     Any other task like reading inputs
+
+### TIM2 interrupts
+1. What does the timer prescaler do?
+    Divides the clock
+2. What does the counter period control?
+    Sets the maximum count before timer resets and generates an update event.
+3. Why does the callback check htim->Instance == TIM2?
+    Callbacks may differ so we check if the timer is from TIM2.
+4. What can the main loop do now that it is not blocked?
+    It can do other tasks.
+
