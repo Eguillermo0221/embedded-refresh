@@ -10,3 +10,14 @@
     No, rather concurrently
 5. What do you predict would happen if the LED task never delayed or blocked?
     It will always stay at read, using up resources especially if it is in higher priority.
+
+1. What state is a task in while it is inside osDelay()?
+    Blocked
+2. Can the monitor task run while the heartbeat task is delayed?
+    Yes
+3. Why does every task need to block, delay, suspend, or yield at some point?
+    To allow other tasks to use resources
+4. What could happen if a task contains an infinite loop with no blocking call?
+    It will get stuck at running if it's the highest priority.
+5. Are these tasks truly running simultaneously on the single-core STM32?
+    Concurrently so virtually simultaneously
