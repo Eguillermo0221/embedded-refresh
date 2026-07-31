@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include <stdint.h>
+#include "cmsis_os2.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -67,8 +67,13 @@ const osThreadAttr_t MonitorTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for heartbeatQueue */
+osMessageQueueId_t heartbeatQueueHandle;
+const osMessageQueueAttr_t heartbeatQueue_attributes = {
+  .name = "heartbeatQueue"
+};
 /* USER CODE BEGIN PV */
-volatile uint32_t heartbeatCount = 0;
+volatile uint32_t last_heartbeat_count = 0U;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -139,6 +144,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of heartbeatQueue */
+  heartbeatQueueHandle = osMessageQueueNew (5, sizeof(uint16_t), &heartbeatQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -326,11 +335,16 @@ static void MX_GPIO_Init(void)
 void StartHeartbeatTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+
+  uint32_t heartbeat_count = 0U;
   /* Infinite loop */
   for(;;)
   {
-    heartbeatCount++;
-    osDelay(500);
+    heartbeat_count++;
+    HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
+    
+    osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
+    osDelay(500U);
   }
   /* USER CODE END 5 */
 }
@@ -348,8 +362,8 @@ void StartLedTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
-    osDelay(300);
+    // HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
+    // osDelay(300);
   }
   /* USER CODE END StartLedTask */
 }
@@ -368,8 +382,10 @@ void StartMonitorTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    monitor_count++;
-    osDelay(1000);
+    if(osMessageQueueGet(heartbeatQueueHandle,&monitor_count,NULL,osWaitForever) == osOK){
+      last_heartbeat_count = monitor_count;
+    }
+    last_heartbeat_count = monitor_count;
   }
   /* USER CODE END StartMonitorTask */
 }

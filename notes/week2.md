@@ -21,3 +21,16 @@
     It will get stuck at running if it's the highest priority.
 5. Are these tasks truly running simultaneously on the single-core STM32?
     Concurrently so virtually simultaneously
+
+### Queues
+
+1. What state is the monitor task in while waiting on osMessageQueueGet()?
+    The monitor task will stay blocked.
+2. Does the queue store the pointer or copy the uint32_t value?
+    RTOS takes the value in the pointer and puts it in the queue.
+3. What happens when osMessageQueuePut() uses a zero timeout and the queue is full?
+    It normally returns a value but it will not accept the new message.
+4. Why is the queue preferable to both tasks accessing one global counter?
+    It avoids the risk of a race condition.
+5. Why can the monitor task work without a periodic delay?
+    Because it is set to block until there's activity in the queue. 
