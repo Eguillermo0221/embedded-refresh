@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "cmsis_os2.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,13 +52,6 @@ const osThreadAttr_t heartbeatTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for ledTask */
-osThreadId_t ledTaskHandle;
-const osThreadAttr_t ledTask_attributes = {
-  .name = "ledTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
-};
 /* Definitions for MonitorTask */
 osThreadId_t MonitorTaskHandle;
 const osThreadAttr_t MonitorTask_attributes = {
@@ -81,7 +73,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 void StartHeartbeatTask(void *argument);
-void StartLedTask(void *argument);
 void StartMonitorTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -156,9 +147,6 @@ int main(void)
   /* Create the thread(s) */
   /* creation of heartbeatTask */
   heartbeatTaskHandle = osThreadNew(StartHeartbeatTask, NULL, &heartbeatTask_attributes);
-
-  /* creation of ledTask */
-  ledTaskHandle = osThreadNew(StartLedTask, NULL, &ledTask_attributes);
 
   /* creation of MonitorTask */
   MonitorTaskHandle = osThreadNew(StartMonitorTask, NULL, &MonitorTask_attributes);
@@ -331,6 +319,8 @@ static void MX_GPIO_Init(void)
   * @param  argument: Not used
   * @retval None
   */
+
+volatile uint32_t queue_send_fails = 0U;
 /* USER CODE END Header_StartHeartbeatTask */
 void StartHeartbeatTask(void *argument)
 {
@@ -338,34 +328,22 @@ void StartHeartbeatTask(void *argument)
 
   uint32_t heartbeat_count = 0U;
   /* Infinite loop */
+
   for(;;)
   {
     heartbeat_count++;
     HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
     
-    osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
+    osStatus_t status = osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
+    if (status != osOK) {
+      queue_send_fails++;
+    }
+
+
     osDelay(500U);
+
   }
   /* USER CODE END 5 */
-}
-
-/* USER CODE BEGIN Header_StartLedTask */
-/**
-* @brief Function implementing the ledTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartLedTask */
-void StartLedTask(void *argument)
-{
-  /* USER CODE BEGIN StartLedTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    // HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
-    // osDelay(300);
-  }
-  /* USER CODE END StartLedTask */
 }
 
 /* USER CODE BEGIN Header_StartMonitorTask */
@@ -386,6 +364,8 @@ void StartMonitorTask(void *argument)
       last_heartbeat_count = monitor_count;
     }
     last_heartbeat_count = monitor_count;
+
+    osDelay(4000U);
   }
   /* USER CODE END StartMonitorTask */
 }
