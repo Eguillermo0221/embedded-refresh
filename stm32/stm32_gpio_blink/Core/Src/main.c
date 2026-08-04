@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define HEARTBEAT_FLAG (1U << 0)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -334,10 +334,11 @@ void StartHeartbeatTask(void *argument)
     heartbeat_count++;
     HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
     
-    osStatus_t status = osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
-    if (status != osOK) {
-      queue_send_fails++;
-    }
+    // osStatus_t status = osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
+    // if (status != osOK) {
+    //   queue_send_fails++;
+    // }
+    osThreadFlagsSet(MonitorTaskHandle,HEARTBEAT_FLAG);
 
 
     osDelay(500U);
@@ -352,20 +353,28 @@ void StartHeartbeatTask(void *argument)
 * @param argument: Not used
 * @retval None
 */
+ volatile uint32_t heartbeat_notifications = 0U;
 /* USER CODE END Header_StartMonitorTask */
 void StartMonitorTask(void *argument)
 {
   /* USER CODE BEGIN StartMonitorTask */
   volatile uint32_t monitor_count = 0U;
+ 
   /* Infinite loop */
   for(;;)
   {
-    if(osMessageQueueGet(heartbeatQueueHandle,&monitor_count,NULL,osWaitForever) == osOK){
-      last_heartbeat_count = monitor_count;
+    
+    uint32_t flags = osThreadFlagsWait(HEARTBEAT_FLAG,osFlagsWaitAny,osWaitForever);
+
+    if((flags & HEARTBEAT_FLAG) != 0U) {
+      heartbeat_notifications++;
     }
+    // if(osMessageQueueGet(heartbeatQueueHandle,&monitor_count,NULL,osWaitForever) == osOK){
+    //   last_heartbeat_count = monitor_count;
+    // }
     //last_heartbeat_count = monitor_count;
 
-    osDelay(4000U);
+    // osDelay(4000U);
   }
   /* USER CODE END StartMonitorTask */
 }
