@@ -34,3 +34,15 @@
     It avoids the risk of a race condition.
 5. Why can the monitor task work without a periodic delay?
     Because it is set to block until there's activity in the queue. 
+
+### Adding 
+1. Why did the queue become full?
+    The monitor task took long to handle the queue due to its delay
+2. What does a zero timeout mean when sending?
+    It will not wait for it to open.
+3. Were old messages overwritten?
+    No, it just stays in the queue.
+4. What are two possible ways to handle a full queue?
+    Increase queue capacity or slow the producer and/or speed up the consumer.
+5. Should heartbeat data preserve every count, or would keeping only the latest value sometimes be better?
+    The last value would be better.

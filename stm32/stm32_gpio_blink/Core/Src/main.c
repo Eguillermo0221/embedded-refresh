@@ -363,7 +363,7 @@ void StartMonitorTask(void *argument)
     if(osMessageQueueGet(heartbeatQueueHandle,&monitor_count,NULL,osWaitForever) == osOK){
       last_heartbeat_count = monitor_count;
     }
-    last_heartbeat_count = monitor_count;
+    //last_heartbeat_count = monitor_count;
 
     osDelay(4000U);
   }
