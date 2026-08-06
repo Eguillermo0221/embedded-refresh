@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include <stdbool.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -65,7 +66,11 @@ const osMessageQueueAttr_t heartbeatQueue_attributes = {
   .name = "heartbeatQueue"
 };
 /* USER CODE BEGIN PV */
-volatile uint32_t last_heartbeat_count = 0U;
+// volatile uint32_t last_heartbeat_count = 0U;
+volatile uint32_t heartbeat_recd_count = 0U;
+volatile uint32_t heartbeat_missed_count = 0U;
+volatile uint32_t heartbeat_healthy = 0U;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -326,22 +331,14 @@ void StartHeartbeatTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
 
-  uint32_t heartbeat_count = 0U;
-  /* Infinite loop */
-
   for(;;)
   {
-    heartbeat_count++;
     HAL_GPIO_TogglePin(LED2_GPIO_PORT,LED2_PIN);
     
-    // osStatus_t status = osMessageQueuePut(heartbeatQueueHandle, &heartbeat_count, 0U, 0U);
-    // if (status != osOK) {
-    //   queue_send_fails++;
-    // }
     osThreadFlagsSet(MonitorTaskHandle,HEARTBEAT_FLAG);
 
 
-    osDelay(500U);
+    osDelay(3000U);
 
   }
   /* USER CODE END 5 */
@@ -364,17 +361,18 @@ void StartMonitorTask(void *argument)
   for(;;)
   {
     
-    uint32_t flags = osThreadFlagsWait(HEARTBEAT_FLAG,osFlagsWaitAny,osWaitForever);
+    uint32_t flags = osThreadFlagsWait(HEARTBEAT_FLAG,osFlagsWaitAny,1000U);
 
-    if((flags & HEARTBEAT_FLAG) != 0U) {
-      heartbeat_notifications++;
+    if((flags & osFlagsError) != 0U) {
+      heartbeat_missed_count++;
+      heartbeat_healthy = false;
     }
-    // if(osMessageQueueGet(heartbeatQueueHandle,&monitor_count,NULL,osWaitForever) == osOK){
-    //   last_heartbeat_count = monitor_count;
-    // }
-    //last_heartbeat_count = monitor_count;
 
-    // osDelay(4000U);
+    else if((flags & HEARTBEAT_FLAG) != 0U){
+      heartbeat_recd_count++;
+      heartbeat_healthy = true;
+    }
+
   }
   /* USER CODE END StartMonitorTask */
 }
